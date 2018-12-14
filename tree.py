@@ -175,6 +175,16 @@ class Node:
             s += i.w**alpha * len
             s += i.Malpha()
         return s
+    
+    def local_optimization(self):
+        """local optimiaztion of the graph"""
+        if len(self.children) == 0:
+            return
+        points = self.children
+        self.children = []
+        SNOP(self, points)
+        #for child in self.children:
+        #    child.local_optimization()
 
 def line(A, B, weight):
     """draw a line between A and B of witdh proportionnal to weight"""
@@ -195,50 +205,15 @@ def sort(points, x, y):
             subpoints.append(sp)
     return subpoints, root, subdomain
 
+
 def subdivision(root, points, domain):
+    """creates the initial graph using the subdivision method"""
     N = len(points)
-    if N==1:
-        root.add_child(points[0])
-        return root
-    if N==2:
-        root.add_child(points[0])
-        root.add_child(points[1])
-        #root.B_star(points[0],points[1])
-        return root
-    n=2
     l=3
+    n=2
     K=l**n
     if N<K:
-        gmax=0
-        #flag = False will mean that B_star hasn't changed anything
-        for ind1 in range(N):
-            for ind2 in range(ind1+1,N):
-                i = points[ind1].copy()
-                j = points[ind2].copy()
-                if(i.pos[0] != j.pos[0] or i.pos[1] != j.pos[1]):
-                    O = Node(root.pos[0], root.pos[1], i.w+j.w, None, [i,j])
-                    MO = O.Malpha()
-                    O.B_star(i,j)
-                    MB = O.Malpha()
-                    g = MO - MB
-                    if g>=gmax:
-                        gmax=g
-                        ind = [ind1,ind2]
-                else:
-                    print("bug")
-        i_star = points[ind[0]]
-        j_star = points[ind[1]]
-        O = Node(root.pos[0], root.pos[1], i_star.w+j_star.w, None, [i_star,j_star])
-        flag = O.B_star(i_star, j_star)
-        points.remove(i_star)
-        points.remove(j_star)
-        B_star = O.children[0]
-        if flag:
-            points.append(B_star)
-        else:
-            root.add_child(i_star)
-            root.add_child(j_star)
-        return subdivision(root, points, domain)
+        return SNOP(root, points)
     xlines=np.linspace(domain[0],domain[2],l+1)
     ylines=np.linspace(domain[1],domain[3],l+1) 
     subpoints, subroot, subdomain = sort(points, xlines, ylines)
@@ -247,6 +222,50 @@ def subdivision(root, points, domain):
             Gi=subdivision(subroot[i], subpoints[i], subdomain[i])
             root.add_child(Gi)
     return root
+
+
+
+def SNOP(root, points):
+    """Method for a small number of points"""
+    N = len(points)
+    if N==1:
+        root.add_child(points[0])
+        return root
+    if N==2:
+        root.add_child(points[0])
+        root.add_child(points[1])
+        root.B_star(points[0],points[1])
+        return root
+    gmax=0
+    #flag = False will mean that B_star hasn't changed anything
+    for ind1 in range(N):
+        for ind2 in range(ind1+1,N):
+            i = points[ind1].copy()
+            j = points[ind2].copy()
+            if(i.pos[0] != j.pos[0] or i.pos[1] != j.pos[1]):
+                O = Node(root.pos[0], root.pos[1], i.w+j.w, None, [i,j])
+                MO = O.Malpha()
+                O.B_star(i,j)
+                MB = O.Malpha()
+                g = MO - MB
+                if g>=gmax:
+                    gmax=g
+                    ind = [ind1,ind2]
+            else:
+                print("bug")
+    i_star = points[ind[0]]
+    j_star = points[ind[1]]
+    O = Node(root.pos[0], root.pos[1], i_star.w+j_star.w, None, [i_star,j_star])
+    flag = O.B_star(i_star, j_star)
+    points.remove(i_star)
+    points.remove(j_star)
+    B_star = O.children[0]
+    if flag:
+        points.append(B_star)
+    else:
+        root.add_child(i_star)
+        root.add_child(j_star)
+    return SNOP(root, points)
 
 """Chain method, where each node has a child which is the least costly node to it"""
 

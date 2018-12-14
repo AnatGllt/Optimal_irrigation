@@ -53,6 +53,8 @@ O = subdivision(root, points, domain)
 
 #O = tree.averagesubdiv(root, points, domain)
 
+O.local_optimization()
+
 O.plot()
 
 plt.clf()
