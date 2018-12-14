@@ -222,7 +222,7 @@ def subdivision(root, points, domain):
                     MB = O.Malpha()
                     g = MO - MB
                     if g>=gmax:
-                        g=gmax
+                        gmax=g
                         ind = [ind1,ind2]
                 else:
                     print("bug")

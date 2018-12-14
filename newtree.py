@@ -210,7 +210,7 @@ def subdivision(root, points, domain):
     if N==2:
         root.add_child(points[0])
         root.add_child(points[1])
-        #root.B_star(points[0],points[1])
+        root.B_star(points[0],points[1])
         return root
     n=2
     l=3
@@ -229,7 +229,7 @@ def subdivision(root, points, domain):
                     MB = O.Malpha()
                     g = MO - MB
                     if g>=gmax:
-                        g=gmax
+                        gmax=g
                         ind = [ind1,ind2]
                 else:
                     print("bug")
