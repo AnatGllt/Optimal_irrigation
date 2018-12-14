@@ -75,10 +75,14 @@ class Node:
             line(self.pos, node.pos, node.w)
             node.plot_rec()
     
+    
+    
     def B_star(self, nodeP, nodeQ):
         """ compute B_star the optimal point for irrigation  from self
         to nodeP and nodeQ by the algorithm described in the article
-        nodeP and nodeQ must both be children of self"""     
+        nodeP and nodeQ must both be children of self"""
+        if equ(self.pos, nodeP.pos) or equ(self.pos, nodeQ.pos) or equ(nodeQ.pos, nodeP.pos):
+            raise ValueError("Two points are the same in computationn of B_star")
         O = self.pos
         P = nodeP.pos
         Q = nodeQ.pos
@@ -87,9 +91,13 @@ class Node:
         mQ = nodeQ.w
         k1 = (mP/mO)**(2*alpha)
         k2 = (mQ/mO)**(2*alpha)
-        theta1 = np.arccos((k2 - k1 - 1)/(2*k1**(1/2)))
-        theta2 = np.arccos((k1 - k2 - 1)/(2*k2**(1/2)))
-        theta3 = np.arccos((1 - k1 - k2)/(2*(k1*k2)**(1/2)))
+        if abs(k1) > 1:
+            print(k1)
+        if abs(k2) > 1:
+            print(k2)
+        theta1 = np.arccos(truncate((k2 - k1 - 1)/(2*k1**(1/2))))
+        theta2 = np.arccos(truncate((k1 - k2 - 1)/(2*k2**(1/2))))
+        theta3 = np.arccos(truncate((1 - k1 - k2)/(2*(k1*k2)**(1/2))))
         
         QM = (np.dot(P-O,Q-O)/np.dot(P-O,P-O)) * (P - O) - (Q - O) 
         PH = (np.dot(P-O,Q-O)/np.dot(Q-O,Q-O)) * (Q - O) - (P - O) 
@@ -180,11 +188,25 @@ class Node:
         """local optimiaztion of the graph"""
         if len(self.children) == 0:
             return
-        points = self.children
+        points = []
+        for i in self.children:
+            points.append(i)
         self.children = []
         SNOP(self, points)
-        #for child in self.children:
-        #    child.local_optimization()
+        for child in self.children:
+            child.local_optimization()
+
+def equ(a, b):
+        return a[0] == b[0] and a[1] == b[1]
+
+def truncate(x):
+    if x < -1:
+        print("truncation of : ",x)
+        return -1
+    if x > 1:
+        print("truncation of : ",x)
+        return 1
+    return x
 
 def line(A, B, weight):
     """draw a line between A and B of witdh proportionnal to weight"""
@@ -228,6 +250,8 @@ def subdivision(root, points, domain):
 def SNOP(root, points):
     """Method for a small number of points"""
     N = len(points)
+    if N==0:
+        return
     if N==1:
         root.add_child(points[0])
         return root

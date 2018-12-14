@@ -35,7 +35,7 @@ ymax = 10
 
 domain = [xmin, ymin, xmax, ymax]
 
-N = 100
+N = 50
 
 points = []
 for i in range(N):
@@ -54,6 +54,8 @@ O = subdivision(root, points, domain)
 #O = tree.averagesubdiv(root, points, domain)
 
 O.local_optimization()
+
+print(O.Malpha())
 
 O.plot()
 
