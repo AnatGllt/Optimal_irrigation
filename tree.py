@@ -1,10 +1,9 @@
 
-import copy
 import numpy as np
 import numpy.linalg as LA
 import matplotlib.pyplot as plt
 
-alpha = 0.5
+alpha = 0.75
 
 class Node:
     
@@ -13,6 +12,10 @@ class Node:
         self.pos = np.array([x,y])
         self.w = w
         self.father = father
+        f = father
+        while f is not None:
+            f.w += w
+            f = f.father
         if children is None:
             self.children = []
         else:
@@ -22,8 +25,23 @@ class Node:
             if w != sum([P.w for P in children]):
                 raise ValueError("Created node has weight different than the sum of its children's")
     
+    def check_tree(self):
+        res = True
+        if self.children != []:
+            res = self.w == sum([c.w for c in self.children])
+        if not res:
+            print(self.w, " != ", sum([c.w for c in self.children]))
+        for child in self.children:
+            res = res and child.check_tree()
+        return res
+        
+    def  print_tree(self):
+        print(self)
+        for c in self.children:
+            c.print_tree()
+    
     def copy(self):
-        return Node(self.pos[0], self.pos[1], self.w, self.father, None)
+        return Node(self.pos[0], self.pos[1], self.w, None, None)
     
     def __str__(self):
         string = "position : (" + str(self.pos[0]) + ", "+ str(self.pos[1]) + ") \n" 
@@ -63,7 +81,7 @@ class Node:
         A = self.pos
         B = node1.pos
         C = node2.pos
-        return np.arccos(np.dot(B-A, C-A) / (LA.norm(C-A)*LA.norm(B-A))) 
+        return np.arccos(truncate(np.dot(B-A, C-A) / (LA.norm(C-A)*LA.norm(B-A))))
         
     def plot(self):
         self.plot_rec()
@@ -86,15 +104,22 @@ class Node:
         O = self.pos
         P = nodeP.pos
         Q = nodeQ.pos
+        if is_aligned(O,P,Q):
+            C = middle(O,P,Q)
+            if np.all(C == O):
+                return False
+            if np.all(C == Q):
+                self.remove_child(nodeP)
+                nodeQ.add_child(nodeP)
+                return True
+            self.remove_child(nodeQ)
+            nodeP.add_child(nodeQ)
+            return True
         mO= self.w
         mP = nodeP.w
         mQ = nodeQ.w
         k1 = (mP/mO)**(2*alpha)
         k2 = (mQ/mO)**(2*alpha)
-        if abs(k1) > 1:
-            print(k1)
-        if abs(k2) > 1:
-            print(k2)
         theta1 = np.arccos(truncate((k2 - k1 - 1)/(2*k1**(1/2))))
         theta2 = np.arccos(truncate((k1 - k2 - 1)/(2*k2**(1/2))))
         theta3 = np.arccos(truncate((1 - k1 - k2)/(2*(k1*k2)**(1/2))))
@@ -125,7 +150,9 @@ class Node:
             return True
         else:
             B = 2*((1 - t)*R + t * S) - O
-            nodeB = Node(B[0], B[1], nodeP.w + nodeQ.w, self, [nodeP, nodeQ])
+            nodeB = Node(B[0], B[1], 0, self)
+            nodeB.add_child(nodeP)
+            nodeB.add_child(nodeQ)
             self.remove_child(nodeP)
             self.remove_child(nodeQ)
             self.add_child(nodeB)
@@ -189,12 +216,73 @@ class Node:
         if len(self.children) == 0:
             return
         points = []
+        print(self.children)
         for i in self.children:
             points.append(i)
-        self.children = []
+        for i in self.children:
+            self.remove_child(i)
+        print(points)
         SNOP(self, points)
         for child in self.children:
             child.local_optimization()
+
+    def Pg(self, t):
+        if self.father is None:
+            return 0
+        return LA.norm(self.pos - self.father.pos)*(self.w**alpha - (self.w - t)**alpha) +  self.father.Pg(t)
+    
+        
+    def potential_father(self, root, sigma):
+        """ return a list of potential father  of node self"""
+        if self.father is None:
+            #global root has no potential father
+            return []
+        l = []
+        if LA.norm(root.pos - self.pos) < sigma:
+            l.append(root)
+        for node in root.children:
+            if node != self.father:
+                l += self.potential_father(node, sigma)
+        return l
+                
+    def update_father(self):
+        if self.father is None:
+            return
+        sigma = self.Pg(self.w)/self.w**alpha
+        max_gain = sigma * self.w**alpha
+        new_father = self.father
+        self.father.remove_child(self)
+        root = self.father
+        while root.father is not None:
+            root = root.father
+        for node in self.potential_father(root, sigma):
+            c = - node.Pg(-self.w)
+            if c > max_gain:
+                max_gain = c
+                new_father = node
+        new_father.add_child(self)
+        return
+    
+    def update_all(self):
+        self.update_father()
+        for child in self.children:
+            child.update_father()
+        
+        
+        
+#End of class Node
+
+def is_aligned(O, P, Q):
+    """ return true if O,P and Q are aligned"""
+    return abs(np.dot(O - P,O - Q)) == LA.norm(O - P)*LA.norm(O - Q)
+
+def middle(O, P, Q):
+    """return the middle poinr of O,P and Q (only has a meaning if they're aligned)"""
+    if np.dot(O - P,O - Q) <= 0:
+        return O
+    if np.dot(Q - P,Q - O) <= 0:
+        return Q
+    return P
 
 def equ(a, b):
         return a[0] == b[0] and a[1] == b[1]
@@ -261,6 +349,7 @@ def SNOP(root, points):
         root.B_star(points[0],points[1])
         return root
     gmax=0
+    ind = [0,1]
     #flag = False will mean that B_star hasn't changed anything
     for ind1 in range(N):
         for ind2 in range(ind1+1,N):
@@ -272,11 +361,12 @@ def SNOP(root, points):
                 O.B_star(i,j)
                 MB = O.Malpha()
                 g = MO - MB
+                print("g = ",g)
                 if g>=gmax:
                     gmax=g
                     ind = [ind1,ind2]
             else:
-                print("bug")
+                print("Two points are the same in SNOP method")
     i_star = points[ind[0]]
     j_star = points[ind[1]]
     O = Node(root.pos[0], root.pos[1], i_star.w+j_star.w, None, [i_star,j_star])

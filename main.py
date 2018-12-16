@@ -35,7 +35,7 @@ ymax = 10
 
 domain = [xmin, ymin, xmax, ymax]
 
-N = 50
+N = 8
 
 points = []
 for i in range(N):
@@ -45,6 +45,11 @@ root = Node(0, 0, 0)
 
 O = subdivision(root, points, domain)
 
+
+O.plot()
+
+print(O.Malpha())
+
 #O = tree.chain(root, points)
 
 #O = tree.naive(root, points)
@@ -53,12 +58,21 @@ O = subdivision(root, points, domain)
 
 #O = tree.averagesubdiv(root, points, domain)
 
+
+
 O.local_optimization()
 
-print(O.Malpha())
 
 O.plot()
 
+print(O.Malpha())
+
+"""O.update_all()
+
+O.plot()
+
+print(O.Malpha())
+"""
 plt.clf()
 
 
