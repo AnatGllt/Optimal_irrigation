@@ -115,7 +115,7 @@ class Node:
             self.remove_child(nodeQ)
             nodeP.add_child(nodeQ)
             return True
-        mO= self.w
+        mO= nodeP.w + nodeQ.w
         mP = nodeP.w
         mQ = nodeQ.w
         k1 = (mP/mO)**(2*alpha)
@@ -221,8 +221,8 @@ class Node:
             points.append(i)
         for i in self.children:
             self.remove_child(i)
-        print(points)
         SNOP(self, points)
+        print(self.children)
         for child in self.children:
             child.local_optimization()
 
@@ -361,7 +361,6 @@ def SNOP(root, points):
                 O.B_star(i,j)
                 MB = O.Malpha()
                 g = MO - MB
-                print("g = ",g)
                 if g>=gmax:
                     gmax=g
                     ind = [ind1,ind2]

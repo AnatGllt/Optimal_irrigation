@@ -35,7 +35,7 @@ ymax = 10
 
 domain = [xmin, ymin, xmax, ymax]
 
-N = 8
+N = 10
 
 points = []
 for i in range(N):
