@@ -60,7 +60,7 @@ print(O.Malpha())
 
 
 
-O.local_optimization()
+#O.local_optimization()
 
 
 O.plot()

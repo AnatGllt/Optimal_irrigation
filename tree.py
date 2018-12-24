@@ -66,9 +66,21 @@ class Node:
             raise ValueError("Trying to remove a child that isn't one")
         self.w -= node.w
         f = self.father
+        node.father = None
         while f is not None:
             f.w -= node.w
             f = f.father
+    
+    def empty_children(self):
+        l = self.children
+        self.children = []
+        f = self.father
+        while f is not None:
+            f.w -= self.w
+            f = f.father
+        self.w = 0
+        return l
+            
         
     def reset(self):
         for i in self.children:
@@ -215,14 +227,13 @@ class Node:
         """local optimiaztion of the graph"""
         if len(self.children) == 0:
             return
-        points = []
-        print(self.children)
+        points = self.empty_children()      
+        """
         for i in self.children:
             points.append(i)
-        for i in self.children:
-            self.remove_child(i)
+        for i in points:
+            self.remove_child(i)"""
         SNOP(self, points)
-        print(self.children)
         for child in self.children:
             child.local_optimization()
 
