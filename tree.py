@@ -73,12 +73,14 @@ class Node:
     
     def empty_children(self):
         l = self.children
+        weight = 0
+        for c in l:
+            weight += c.w
         self.children = []
-        f = self.father
+        f = self
         while f is not None:
-            f.w -= self.w
+            f.w -= weight 
             f = f.father
-        self.w = 0
         return l
             
         
