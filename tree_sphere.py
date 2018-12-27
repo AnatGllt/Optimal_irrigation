@@ -383,7 +383,6 @@ class SphereNode (Node):
             G[1] = mO**alpha*(np.cos(O[0]) * np.cos(x[0]) * np.sin(x[1] - O[1]))/np.sqrt(1 - (np.sin(O[0]) * np.sin(x[0]) + np.cos(O[0]) * np.cos(x[0]) * np.cos(x[1] - O[1]))**2)
             G[1] += mP**alpha*(np.cos(P[0]) * np.cos(x[0]) * np.sin(x[1] - P[1]))/np.sqrt(1 - (np.sin(P[0]) * np.sin(x[0]) + np.cos(P[0]) * np.cos(x[0]) * np.cos(x[1] - P[1]))**2)
             G[1] += mQ**alpha*(np.cos(Q[0]) * np.cos(x[0]) * np.sin(x[1] - Q[1]))/np.sqrt(1 - (np.sin(Q[0]) * np.sin(x[0]) + np.cos(Q[0]) * np.cos(x[0]) * np.cos(x[1] - Q[1]))**2)
-            print(G)
             return G
             
         step = 0.01
@@ -396,47 +395,9 @@ class SphereNode (Node):
             if(np.linalg.norm(diff)<epsilon) or n==0:
                 return x
             else:
-                print("two")
                 return descent(x-step*diff, n-1)
 
         B = descent(start, MAX)
-        
-        print(B)
-        
-        if (SphereNode.distance(B, O)<epsilon):
-            return
-        elif (SphereNode.distance(B, Q)<epsilon):
-            self.remove_child(nodeP)
-            nodeQ.add_child(nodeP)
-            return
-        elif (SphereNode.distance(B, P)<epsilon):
-            self.remove_child(nodeQ)
-            nodeP.add_child(nodeQ)
-            return
-        else:
-            nodeB = SphereNode(B[0], B[1], self.w, self, [nodeP, nodeQ])
-            self.remove_child(nodeP)
-            self.remove_child(nodeQ)
-            self.add_child(nodeB)
-        return
-        
-    def B_grad(self, nodeP, nodeQ):
-        
-        O = self.pos
-        P = nodeP.pos
-        Q = nodeQ.pos
-        mO= self.w
-        mP = nodeP.w
-        mQ = nodeQ.w
-        
-        epsilon = 0.01
-        
-        def M(x):
-            return mO**alpha*SphereNode.distance(O, x) + mP**alpha*SphereNode.distance(P, x) + mQ**alpha*SphereNode.distance(Q, x)
-        
-        B = opt.fmin(M, (O+P+Q)/3.0)
-        
-        print(B)
         
         if (SphereNode.distance(B, O)<epsilon):
             return
