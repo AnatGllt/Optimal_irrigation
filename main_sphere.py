@@ -7,9 +7,9 @@ Created on Sun Dec  9 16:02:28 2018
 
 import random as rd
 import tree
-from tree import Node
-from tree import SphereNode
-from tree import subdivision
+from tree_sphere import Node
+from tree_sphere import SphereNode
+from tree_sphere import subdivision
 import sys
 
 """
