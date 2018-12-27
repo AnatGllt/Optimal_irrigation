@@ -6,7 +6,7 @@ Created on Sun Dec  9 16:02:28 2018
 """
 
 import random as rd
-import tree
+import tree_sphere
 from tree_sphere import Node
 from tree_sphere import SphereNode
 from tree_sphere import subdivision
@@ -60,10 +60,19 @@ plt.clf()
 """
 sys.setrecursionlimit(20000)
 
-weight = rd.random()
-P = SphereNode(rd.random(),rd.random(),weight)
-Q = SphereNode(rd.random(),rd.random(),1-weight)
-O = SphereNode(0, 0, 1)
+P = SphereNode(rd.random(),rd.random(),rd.random())
+Q = SphereNode(rd.random(),rd.random(),rd.random())
+O = SphereNode(0, 0, 0)
 O.add_child(P)
 O.add_child(Q)
-O.plot()
+O.B_star(P,Q)
+print(O.Malpha())
+#O.plot()
+
+O.reset()
+O = SphereNode(0, 0, 0)
+O.add_child(P)
+O.add_child(Q)
+O.B_grad(P,Q)
+print(O.Malpha())
+#O.plot()
