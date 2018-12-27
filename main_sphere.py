@@ -7,6 +7,7 @@ Created on Sun Dec  9 16:02:28 2018
 
 import random as rd
 import tree_sphere
+import math
 from tree_sphere import Node
 from tree_sphere import SphereNode
 from tree_sphere import subdivision
@@ -60,8 +61,8 @@ plt.clf()
 """
 sys.setrecursionlimit(20000)
 
-P = SphereNode(rd.random(),rd.random(),rd.random())
-Q = SphereNode(rd.random(),rd.random(),rd.random())
+P = SphereNode(rd.random()*math.pi*2,rd.random()*math.pi,rd.random())
+Q = SphereNode(rd.random()*math.pi*2,rd.random()*math.pi,rd.random())
 O = SphereNode(0, 0, 0)
 O.add_child(P)
 O.add_child(Q)

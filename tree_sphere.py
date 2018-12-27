@@ -355,11 +355,11 @@ class SphereNode (Node):
         d = np.arccos(np.sin(A[0]) * np.sin(B[0]) + np.cos(A[0]) * np.cos(B[0]) * np.cos(A[1]-B[1]))
         return d
     
-    def Malpha(node):
+    def Malpha(self):
         """ computes Malpha aka the sum to minimize """
         s = 0
-        for i in node.children:
-            len = SphereNode.distance(node.pos, i.pos)
+        for i in self.children:
+            len = SphereNode.distance(self.pos, i.pos)
             s += i.w**alpha * len
             s += i.Malpha()
         return s
@@ -376,13 +376,14 @@ class SphereNode (Node):
         mQ = nodeQ.w
 
         def DMalpha(x):
-            G = np.array([0,0])
+            G = np.array([0.0,0.0])
             G[0] = -mO**alpha*(np.sin(O[0]) * np.cos(x[0]) - np.cos(O[0]) * np.sin(x[0]) * np.cos(x[1] - O[1]))/np.sqrt(1 - (np.sin(O[0]) * np.sin(x[0]) + np.cos(O[0]) * np.cos(x[0]) * np.cos(x[1] - O[1]))**2)
             G[0] -= mP**alpha*(np.sin(P[0]) * np.cos(x[0]) - np.cos(P[0]) * np.sin(x[0]) * np.cos(x[1] - P[1]))/np.sqrt(1 - (np.sin(P[0]) * np.sin(x[0]) + np.cos(P[0]) * np.cos(x[0]) * np.cos(x[1] - P[1]))**2)
             G[0] -= mQ**alpha*(np.sin(Q[0]) * np.cos(x[0]) - np.cos(Q[0]) * np.sin(x[0]) * np.cos(x[1] - Q[1]))/np.sqrt(1 - (np.sin(Q[0]) * np.sin(x[0]) + np.cos(Q[0]) * np.cos(x[0]) * np.cos(x[1] - Q[1]))**2)
-            G[1] = mO**alpha*(np.cos(O[0]) * np.cos(x[0]) * np.cos(x[1] - O[1]))/np.sqrt(1 - (np.sin(O[0]) * np.sin(x[0]) + np.cos(O[0]) * np.cos(x[0]) * np.cos(x[1] - O[1]))**2)
-            G[1] += mP**alpha*(np.cos(P[0]) * np.cos(x[0]) * np.cos(x[1] - P[1]))/np.sqrt(1 - (np.sin(P[0]) * np.sin(x[0]) + np.cos(P[0]) * np.cos(x[0]) * np.cos(x[1] - P[1]))**2)
-            G[1] += mQ**alpha*(np.cos(Q[0]) * np.cos(x[0]) * np.cos(x[1] - Q[1]))/np.sqrt(1 - (np.sin(Q[0]) * np.sin(x[0]) + np.cos(Q[0]) * np.cos(x[0]) * np.cos(x[1] - Q[1]))**2)
+            G[1] = mO**alpha*(np.cos(O[0]) * np.cos(x[0]) * np.sin(x[1] - O[1]))/np.sqrt(1 - (np.sin(O[0]) * np.sin(x[0]) + np.cos(O[0]) * np.cos(x[0]) * np.cos(x[1] - O[1]))**2)
+            G[1] += mP**alpha*(np.cos(P[0]) * np.cos(x[0]) * np.sin(x[1] - P[1]))/np.sqrt(1 - (np.sin(P[0]) * np.sin(x[0]) + np.cos(P[0]) * np.cos(x[0]) * np.cos(x[1] - P[1]))**2)
+            G[1] += mQ**alpha*(np.cos(Q[0]) * np.cos(x[0]) * np.sin(x[1] - Q[1]))/np.sqrt(1 - (np.sin(Q[0]) * np.sin(x[0]) + np.cos(Q[0]) * np.cos(x[0]) * np.cos(x[1] - Q[1]))**2)
+            print(G)
             return G
             
         step = 0.01
@@ -395,11 +396,13 @@ class SphereNode (Node):
             if(np.linalg.norm(diff)<epsilon) or n==0:
                 return x
             else:
+                print("two")
                 return descent(x-step*diff, n-1)
 
         B = descent(start, MAX)
         
-        print(DMalpha(B))
+        print(B)
+        
         if (SphereNode.distance(B, O)<epsilon):
             return
         elif (SphereNode.distance(B, Q)<epsilon):
@@ -411,7 +414,7 @@ class SphereNode (Node):
             nodeP.add_child(nodeQ)
             return
         else:
-            nodeB = Node(B[0], B[1], self.w, self, [nodeP, nodeQ])
+            nodeB = SphereNode(B[0], B[1], self.w, self, [nodeP, nodeQ])
             self.remove_child(nodeP)
             self.remove_child(nodeQ)
             self.add_child(nodeB)
@@ -428,24 +431,12 @@ class SphereNode (Node):
         
         epsilon = 0.01
         
-        def DMalpha(x):
-            G = np.array([0,0])
-            G[0] = -mO**alpha*(np.sin(O[0]) * np.cos(x[0]) - np.cos(O[0]) * np.sin(x[0]) * np.cos(x[1] - O[1]))/np.sqrt(1 - (np.sin(O[0]) * np.sin(x[0]) + np.cos(O[0]) * np.cos(x[0]) * np.cos(x[1] - O[1]))**2)
-            G[0] -= mP**alpha*(np.sin(P[0]) * np.cos(x[0]) - np.cos(P[0]) * np.sin(x[0]) * np.cos(x[1] - P[1]))/np.sqrt(1 - (np.sin(P[0]) * np.sin(x[0]) + np.cos(P[0]) * np.cos(x[0]) * np.cos(x[1] - P[1]))**2)
-            G[0] -= mQ**alpha*(np.sin(Q[0]) * np.cos(x[0]) - np.cos(Q[0]) * np.sin(x[0]) * np.cos(x[1] - Q[1]))/np.sqrt(1 - (np.sin(Q[0]) * np.sin(x[0]) + np.cos(Q[0]) * np.cos(x[0]) * np.cos(x[1] - Q[1]))**2)
-            G[1] = mO**alpha*(np.cos(O[0]) * np.cos(x[0]) * np.cos(x[1] - O[1]))/np.sqrt(1 - (np.sin(O[0]) * np.sin(x[0]) + np.cos(O[0]) * np.cos(x[0]) * np.cos(x[1] - O[1]))**2)
-            G[1] += mP**alpha*(np.cos(P[0]) * np.cos(x[0]) * np.cos(x[1] - P[1]))/np.sqrt(1 - (np.sin(P[0]) * np.sin(x[0]) + np.cos(P[0]) * np.cos(x[0]) * np.cos(x[1] - P[1]))**2)
-            G[1] += mQ**alpha*(np.cos(Q[0]) * np.cos(x[0]) * np.cos(x[1] - Q[1]))/np.sqrt(1 - (np.sin(Q[0]) * np.sin(x[0]) + np.cos(Q[0]) * np.cos(x[0]) * np.cos(x[1] - Q[1]))**2)
-            return G
-        
         def M(x):
-            return mO*SphereNode.distance(O, x)**alpha + mP*SphereNode.distance(P, x)**alpha + mQ*SphereNode.distance(Q, x)**alpha
+            return mO**alpha*SphereNode.distance(O, x) + mP**alpha*SphereNode.distance(P, x) + mQ**alpha*SphereNode.distance(Q, x)
         
-        B = opt.fmin(M, O)
+        B = opt.fmin(M, (O+P+Q)/3.0)
         
         print(B)
-        
-        print(DMalpha(B))
         
         if (SphereNode.distance(B, O)<epsilon):
             return
@@ -458,7 +449,7 @@ class SphereNode (Node):
             nodeP.add_child(nodeQ)
             return
         else:
-            nodeB = Node(B[0], B[1], self.w, self, [nodeP, nodeQ])
+            nodeB = SphereNode(B[0], B[1], self.w, self, [nodeP, nodeQ])
             self.remove_child(nodeP)
             self.remove_child(nodeQ)
             self.add_child(nodeB)
