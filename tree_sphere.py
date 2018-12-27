@@ -2,7 +2,7 @@
 import copy
 import numpy as np
 import numpy.linalg as LA
-from mpl_toolkits.basemap import Basemap
+#from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 import spherical_geometry as sg
 import spherical_geometry.polygon as sp
@@ -333,7 +333,6 @@ def averagesubdiv(root, points, domain):
     return root
 
 def sphere_line(A, B, weight):
-    print("Sheela is cute")
     line = sp.SphericalPolygon.from_radec([A[0], B[0]],[A[1], B[1]])
     line.draw(Basemap())
     
@@ -356,11 +355,11 @@ class SphereNode (Node):
         d = np.arccos(np.sin(A[0]) * np.sin(B[0]) + np.cos(A[0]) * np.cos(B[0]) * np.cos(A[1]-B[1]))
         return d
     
-    def Malpha(self):
+    def Malpha(node):
         """ computes Malpha aka the sum to minimize """
         s = 0
-        for i in self.children:
-            len = distance(self.pos, i.pos)
+        for i in node.children:
+            len = SphereNode.distance(node.pos, i.pos)
             s += i.w**alpha * len
             s += i.Malpha()
         return s
@@ -377,6 +376,7 @@ class SphereNode (Node):
         mQ = nodeQ.w
 
         def DMalpha(x):
+            G = np.array([0,0])
             G[0] = -mO**alpha*(np.sin(O[0]) * np.cos(x[0]) - np.cos(O[0]) * np.sin(x[0]) * np.cos(x[1] - O[1]))/np.sqrt(1 - (np.sin(O[0]) * np.sin(x[0]) + np.cos(O[0]) * np.cos(x[0]) * np.cos(x[1] - O[1]))**2)
             G[0] -= mP**alpha*(np.sin(P[0]) * np.cos(x[0]) - np.cos(P[0]) * np.sin(x[0]) * np.cos(x[1] - P[1]))/np.sqrt(1 - (np.sin(P[0]) * np.sin(x[0]) + np.cos(P[0]) * np.cos(x[0]) * np.cos(x[1] - P[1]))**2)
             G[0] -= mQ**alpha*(np.sin(Q[0]) * np.cos(x[0]) - np.cos(Q[0]) * np.sin(x[0]) * np.cos(x[1] - Q[1]))/np.sqrt(1 - (np.sin(Q[0]) * np.sin(x[0]) + np.cos(Q[0]) * np.cos(x[0]) * np.cos(x[1] - Q[1]))**2)
@@ -398,13 +398,15 @@ class SphereNode (Node):
                 return descent(x-step*diff, n-1)
 
         B = descent(start, MAX)
-        if (distance(B, O)<epsilon):
+        
+        print(DMalpha(B))
+        if (SphereNode.distance(B, O)<epsilon):
             return
-        elif (distance(B, Q)<epsilon):
+        elif (SphereNode.distance(B, Q)<epsilon):
             self.remove_child(nodeP)
             nodeQ.add_child(nodeP)
             return
-        elif (distance(B, P)<epsilon):
+        elif (SphereNode.distance(B, P)<epsilon):
             self.remove_child(nodeQ)
             nodeP.add_child(nodeQ)
             return
@@ -424,14 +426,34 @@ class SphereNode (Node):
         mP = nodeP.w
         mQ = nodeQ.w
         
-        B = opt.fmin(MAlpha, O)
-        if (distance(B, O)<epsilon):
+        epsilon = 0.01
+        
+        def DMalpha(x):
+            G = np.array([0,0])
+            G[0] = -mO**alpha*(np.sin(O[0]) * np.cos(x[0]) - np.cos(O[0]) * np.sin(x[0]) * np.cos(x[1] - O[1]))/np.sqrt(1 - (np.sin(O[0]) * np.sin(x[0]) + np.cos(O[0]) * np.cos(x[0]) * np.cos(x[1] - O[1]))**2)
+            G[0] -= mP**alpha*(np.sin(P[0]) * np.cos(x[0]) - np.cos(P[0]) * np.sin(x[0]) * np.cos(x[1] - P[1]))/np.sqrt(1 - (np.sin(P[0]) * np.sin(x[0]) + np.cos(P[0]) * np.cos(x[0]) * np.cos(x[1] - P[1]))**2)
+            G[0] -= mQ**alpha*(np.sin(Q[0]) * np.cos(x[0]) - np.cos(Q[0]) * np.sin(x[0]) * np.cos(x[1] - Q[1]))/np.sqrt(1 - (np.sin(Q[0]) * np.sin(x[0]) + np.cos(Q[0]) * np.cos(x[0]) * np.cos(x[1] - Q[1]))**2)
+            G[1] = mO**alpha*(np.cos(O[0]) * np.cos(x[0]) * np.cos(x[1] - O[1]))/np.sqrt(1 - (np.sin(O[0]) * np.sin(x[0]) + np.cos(O[0]) * np.cos(x[0]) * np.cos(x[1] - O[1]))**2)
+            G[1] += mP**alpha*(np.cos(P[0]) * np.cos(x[0]) * np.cos(x[1] - P[1]))/np.sqrt(1 - (np.sin(P[0]) * np.sin(x[0]) + np.cos(P[0]) * np.cos(x[0]) * np.cos(x[1] - P[1]))**2)
+            G[1] += mQ**alpha*(np.cos(Q[0]) * np.cos(x[0]) * np.cos(x[1] - Q[1]))/np.sqrt(1 - (np.sin(Q[0]) * np.sin(x[0]) + np.cos(Q[0]) * np.cos(x[0]) * np.cos(x[1] - Q[1]))**2)
+            return G
+        
+        def M(x):
+            return mO*SphereNode.distance(O, x)**alpha + mP*SphereNode.distance(P, x)**alpha + mQ*SphereNode.distance(Q, x)**alpha
+        
+        B = opt.fmin(M, O)
+        
+        print(B)
+        
+        print(DMalpha(B))
+        
+        if (SphereNode.distance(B, O)<epsilon):
             return
-        elif (distance(B, Q)<epsilon):
+        elif (SphereNode.distance(B, Q)<epsilon):
             self.remove_child(nodeP)
             nodeQ.add_child(nodeP)
             return
-        elif (distance(B, P)<epsilon):
+        elif (SphereNode.distance(B, P)<epsilon):
             self.remove_child(nodeQ)
             nodeP.add_child(nodeQ)
             return
