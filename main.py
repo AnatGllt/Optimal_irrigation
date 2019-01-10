@@ -58,22 +58,21 @@ print(O.Malpha())
 
 #O = tree.averagesubdiv(root, points, domain)
 
-O.check_tree()
+
 
 O.local_optimization()
 
-O.check_tree()
 
 O.plot()
 
 print(O.Malpha())
 
-"""O.update_all()
+O.update_all()
 
 O.plot()
 
 print(O.Malpha())
-"""
+
 plt.clf()
 
 

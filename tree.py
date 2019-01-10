@@ -36,7 +36,9 @@ class Node:
         return res
         
     def  print_tree(self):
+        print(self.father != None)
         print(self)
+        
         for c in self.children:
             c.print_tree()
     
@@ -66,7 +68,7 @@ class Node:
             raise ValueError("Trying to remove a child that isn't one")
         self.w -= node.w
         f = self.father
-        node.father = None
+        #node.father = None
         while f is not None:
             f.w -= node.w
             f = f.father
@@ -75,6 +77,7 @@ class Node:
         l = self.children
         weight = 0
         for c in l:
+            #c.father = None
             weight += c.w
         self.children = []
         f = self
@@ -236,8 +239,8 @@ class Node:
         for i in points:
             self.remove_child(i)"""
         SNOP(self, points)
-        for child in self.children:
-            child.local_optimization()
+        #for child in self.children:
+        #    child.local_optimization()
 
     def Pg(self, t):
         if self.father is None:
@@ -257,7 +260,8 @@ class Node:
             if node != self.father:
                 l += self.potential_father(node, sigma)
         return l
-                
+        
+        
     def update_father(self):
         if self.father is None:
             return
@@ -279,7 +283,7 @@ class Node:
     def update_all(self):
         self.update_father()
         for child in self.children:
-            child.update_father()
+            child.update_all()
         
         
         
