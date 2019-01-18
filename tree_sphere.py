@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import spherical_geometry as sg
 import spherical_geometry.polygon as sp
 import scipy.optimize as opt
+from mpl_toolkits.basemap import Basemap
 
 alpha = 0.5
 
@@ -332,22 +333,23 @@ def averagesubdiv(root, points, domain):
     iteration(points, domain)
     return root
 
-def sphere_line(A, B, weight):
+def sphere_line(A, B, bm, weight):
     line = sp.SphericalPolygon.from_radec([A[0], B[0]],[A[1], B[1]])
-    line.draw(Basemap())
+    line.draw(bm)
     
 
 class SphereNode (Node):
     
     def plot(self):
         
-        self.plot_rec()
+        bm = Basemap()
+        self.plot_rec(bm)
         plt.show()
     
-    def plot_rec(self):
+    def plot_rec(self, b):
         """plot the tree self recursively on its children """
         for node in self.children:
-            sphere_line(self.pos, node.pos, node.w)
+            sphere_line(self.pos, node.pos, bm, node.w)
             node.plot_rec()
             
     def distance(A, B):
