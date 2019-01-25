@@ -1,13 +1,10 @@
-
 import copy
 import numpy as np
 import numpy.linalg as LA
-#from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
 import spherical_geometry as sg
 import spherical_geometry.polygon as sp
 import scipy.optimize as opt
-from mpl_toolkits.basemap import Basemap
 
 alpha = 0.5
 
@@ -341,20 +338,17 @@ def sphere_line(A, B, bm, weight):
 class SphereNode (Node):
     
     def plot(self):
-        
-        bm = Basemap()
-        self.plot_rec(bm)
         plt.show()
     
-    def plot_rec(self, b):
+    def plot_rec(self, bm):
         """plot the tree self recursively on its children """
         for node in self.children:
             sphere_line(self.pos, node.pos, bm, node.w)
-            node.plot_rec()
+            node.plot_rec(bm)
             
     def distance(A, B):
         """Returns the spherical length bewteen 2 points on a sphere"""
-        d = np.arccos(np.sin(A[0]) * np.sin(B[0]) + np.cos(A[0]) * np.cos(B[0]) * np.cos(A[1]-B[1]))
+        d = np.arccos(np.cos(A[0]) * np.cos(B[0]) + np.sin(A[0]) * np.sin(B[0]) * np.cos(A[1]-B[1]))
         return d
     
     def Malpha(self):
@@ -376,21 +370,30 @@ class SphereNode (Node):
         mO= self.w
         mP = nodeP.w
         mQ = nodeQ.w
+        
+        def Malpha(x):
+            """ computes Malpha aka the sum to minimize """
+            s = 0
+            s += mO**alpha * SphereNode.distance(O, x)
+            s += mP**alpha * SphereNode.distance(P, x)
+            s += mQ**alpha * SphereNode.distance(Q, x)
+            return s
 
         def DMalpha(x):
             G = np.array([0.0,0.0])
-            G[0] = -mO**alpha*(np.sin(O[0]) * np.cos(x[0]) - np.cos(O[0]) * np.sin(x[0]) * np.cos(x[1] - O[1]))/np.sqrt(1 - (np.sin(O[0]) * np.sin(x[0]) + np.cos(O[0]) * np.cos(x[0]) * np.cos(x[1] - O[1]))**2)
-            G[0] -= mP**alpha*(np.sin(P[0]) * np.cos(x[0]) - np.cos(P[0]) * np.sin(x[0]) * np.cos(x[1] - P[1]))/np.sqrt(1 - (np.sin(P[0]) * np.sin(x[0]) + np.cos(P[0]) * np.cos(x[0]) * np.cos(x[1] - P[1]))**2)
-            G[0] -= mQ**alpha*(np.sin(Q[0]) * np.cos(x[0]) - np.cos(Q[0]) * np.sin(x[0]) * np.cos(x[1] - Q[1]))/np.sqrt(1 - (np.sin(Q[0]) * np.sin(x[0]) + np.cos(Q[0]) * np.cos(x[0]) * np.cos(x[1] - Q[1]))**2)
-            G[1] = mO**alpha*(np.cos(O[0]) * np.cos(x[0]) * np.sin(x[1] - O[1]))/np.sqrt(1 - (np.sin(O[0]) * np.sin(x[0]) + np.cos(O[0]) * np.cos(x[0]) * np.cos(x[1] - O[1]))**2)
-            G[1] += mP**alpha*(np.cos(P[0]) * np.cos(x[0]) * np.sin(x[1] - P[1]))/np.sqrt(1 - (np.sin(P[0]) * np.sin(x[0]) + np.cos(P[0]) * np.cos(x[0]) * np.cos(x[1] - P[1]))**2)
-            G[1] += mQ**alpha*(np.cos(Q[0]) * np.cos(x[0]) * np.sin(x[1] - Q[1]))/np.sqrt(1 - (np.sin(Q[0]) * np.sin(x[0]) + np.cos(Q[0]) * np.cos(x[0]) * np.cos(x[1] - Q[1]))**2)
+            G[0] = mO**alpha*(np.cos(O[0]) * np.sin(x[0]) - np.sin(O[0]) * np.cos(x[0]) * np.cos(O[1]-x[1]))/np.sqrt(1 - (np.cos(O[0]) * np.cos(x[0]) + np.sin(O[0]) * np.sin(x[0]) * np.cos(O[1]-x[1]))**2)
+            G[0] += mP**alpha*(np.cos(P[0]) * np.sin(x[0]) - np.sin(P[0]) * np.cos(x[0]) * np.cos(P[1]-x[1]))/np.sqrt(1 - (np.cos(P[0]) * np.cos(x[0]) + np.sin(P[0]) * np.sin(x[0]) * np.cos(P[1]-x[1]))**2)
+            G[0] += mQ**alpha*(np.cos(Q[0]) * np.sin(x[0]) - np.sin(Q[0]) * np.cos(x[0]) * np.cos(Q[1]-x[1]))/np.sqrt(1 - (np.cos(Q[0]) * np.cos(x[0]) + np.sin(Q[0]) * np.sin(x[0]) * np.cos(Q[1]-x[1]))**2)
+            G[1] = -mO**alpha*(np.sin(O[0]) * np.sin(x[0]) * np.sin(O[1]-x[1]))/np.sqrt(1 - (np.cos(O[0]) * np.cos(x[0]) + np.sin(O[0]) * np.sin(x[0]) * np.cos(O[1]-x[1]))**2)
+            G[1] -= mP**alpha*(np.sin(P[0]) * np.sin(x[0]) * np.sin(P[1]-x[1]))/np.sqrt(1 - (np.cos(P[0]) * np.cos(x[0]) + np.sin(P[0]) * np.sin(x[0]) * np.cos(P[1]-x[1]))**2)
+            G[1] -= mQ**alpha*(np.sin(Q[0]) * np.sin(x[0]) * np.sin(Q[1]-x[1]))/np.sqrt(1 - (np.cos(Q[0]) * np.cos(x[0]) + np.sin(Q[0]) * np.sin(x[0]) * np.cos(Q[1]-x[1]))**2)
             return G
             
         step = 0.01
         epsilon = 0.01
-        MAX = 10000
+        MAX = 1000
         start = (O+P+Q)/3.0
+        
     
         def descent(x, n):
             diff = DMalpha(x)
@@ -400,16 +403,20 @@ class SphereNode (Node):
                 return descent(x-step*diff, n-1)
 
         B = descent(start, MAX)
+        print(Malpha(B))
+        print(B)
         
         if (SphereNode.distance(B, O)<epsilon):
             return
         elif (SphereNode.distance(B, Q)<epsilon):
             self.remove_child(nodeP)
             nodeQ.add_child(nodeP)
+    
             return
         elif (SphereNode.distance(B, P)<epsilon):
             self.remove_child(nodeQ)
             nodeP.add_child(nodeQ)
+            
             return
         else:
             nodeB = SphereNode(B[0], B[1], self.w, self, [nodeP, nodeQ])
