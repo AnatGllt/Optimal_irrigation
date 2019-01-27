@@ -9,6 +9,8 @@ import random as rd
 import tree
 from tree import Node
 from tree import subdivision
+from tree import circle
+from tree import rand
 import sys
 import matplotlib.pyplot as plt
 
@@ -35,13 +37,12 @@ ymax = 10
 
 domain = [xmin, ymin, xmax, ymax]
 
-N = 10
+N = 20
 
-points = []
-for i in range(N):
-    points.append(Node((xmax-xmin)*rd.random()+xmin, (ymax-ymin)*rd.random()+ymin, rd.random()/N))
 
-root = Node(0, 0, 0)
+root, points = circle(N)
+#root, points = rand(N)
+
 
 O = subdivision(root, points, domain)
 

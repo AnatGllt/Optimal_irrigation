@@ -2,6 +2,7 @@
 import numpy as np
 import numpy.linalg as LA
 import matplotlib.pyplot as plt
+import random as rd
 
 alpha = 0.75
 
@@ -167,7 +168,9 @@ class Node:
             return True
         else:
             B = 2*((1 - t)*R + t * S) - O
-            nodeB = Node(B[0], B[1], 0, self)
+            if LA.norm(B - self.pos) < 0.00000001:
+                return False
+            nodeB = Node(B[0], B[1], 0)
             nodeB.add_child(nodeP)
             nodeB.add_child(nodeQ)
             self.remove_child(nodeP)
@@ -233,14 +236,9 @@ class Node:
         if len(self.children) == 0:
             return
         points = self.empty_children()      
-        """
-        for i in self.children:
-            points.append(i)
-        for i in points:
-            self.remove_child(i)"""
         SNOP(self, points)
-        #for child in self.children:
-        #    child.local_optimization()
+        for child in self.children:
+            child.local_optimization()
 
     def Pg(self, t):
         if self.father is None:
@@ -306,10 +304,8 @@ def equ(a, b):
 
 def truncate(x):
     if x < -1:
-        print("truncation of : ",x)
         return -1
     if x > 1:
-        print("truncation of : ",x)
         return 1
     return x
 
@@ -420,12 +416,9 @@ def chain(root, points):
 """ Naive method"""
 
 def naive(root, points):
-    w = 0
     O = root
     for i in points:
-        w+=i.w
         O.add_child(i)
-    O.w = w
     return O
 
 """Average method: averages the weights of all the points and uses that as the
@@ -476,3 +469,16 @@ def averagesubdiv(root, points, domain):
         return
     iteration(points, domain)
     return root
+
+def circle(n):
+    """Destination is a circle of n points and uniform weight"""
+    points = [Node(9.9*np.cos(2*k*np.pi/n), 9.9*np.sin(2*k*np.pi/n), 1/n) for k in range(n)]
+    r = Node(0,0,0)
+    return r, points
+
+def rand(n, xmin=-10,xmax=10, ymin=-10,ymax=10):
+    """Random points with random weights """
+    points = [Node((xmax-xmin)*rd.random()+xmin, (ymax-ymin)*rd.random()+ymin, rd.random()/n) for _ in range(n)]
+    r = Node(0,0,0)
+    return r, points
+    
