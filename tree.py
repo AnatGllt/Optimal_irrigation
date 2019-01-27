@@ -51,6 +51,7 @@ class Node:
         string += "weight : " + str(self.w)  + "\n"
         return string
     
+    
     def add_child(self, node):
         """add child "node" to the list of children of self"""
         self.children.append(node)
@@ -87,7 +88,14 @@ class Node:
             f = f.father
         return l
             
-        
+    def clean(self):
+        liste = self.children[:]
+        for c in liste:
+            if c.w == 0:
+                self.remove_child(c)
+            else:
+                c.clean()
+    
     def reset(self):
         for i in self.children:
             self.remove_child(i)
@@ -108,6 +116,7 @@ class Node:
     def plot_rec(self):
         """plot the tree self recursively on its children """
         for node in self.children:
+            #plt.plot(node.pos[0],node.pos[1],'o', color ='red')
             line(self.pos, node.pos, node.w)
             node.plot_rec()
     
@@ -138,6 +147,15 @@ class Node:
         mQ = nodeQ.w
         k1 = (mP/mO)**(2*alpha)
         k2 = (mQ/mO)**(2*alpha)
+        break_bool = False
+        if (mQ ==0):
+            self.remove_child(nodeQ)
+            break_bool = True
+        if (mP == 0):
+            self.remove_child(nodeP)
+            break_bool = True
+        if break_bool:
+            return
         theta1 = np.arccos(truncate((k2 - k1 - 1)/(2*k1**(1/2))))
         theta2 = np.arccos(truncate((k1 - k2 - 1)/(2*k2**(1/2))))
         theta3 = np.arccos(truncate((1 - k1 - k2)/(2*(k1*k2)**(1/2))))
@@ -181,7 +199,6 @@ class Node:
     def B_grad(self, nodeP, nodeQ):
         """ compute B_star the optimal point for irrigation  from self
         to nodeP and nodeQ by the gradient descent method """   
-        
         O = self.pos
         P = nodeP.pos
         Q = nodeQ.pos
@@ -240,6 +257,22 @@ class Node:
         for child in self.children:
             child.local_optimization()
 
+    
+    def subdivide_edges(self,l):
+        children_copy = self.children[:]
+        for c in children_copy:
+            v = c.pos - self.pos
+            el = LA.norm(v)
+            if el>l:
+                self.remove_child(c)
+                new = Node(self.pos[0]+v[0]/int(el/l + 1), self.pos[1]+v[1]/int(el/l + 1), 0)
+                new.add_child(c)
+                self.add_child(new)
+                new.subdivide_edges(l)
+            else:
+                c.subdivide_edges(l)
+        
+
     def Pg(self, t):
         if self.father is None:
             return 0
@@ -255,9 +288,18 @@ class Node:
         if LA.norm(root.pos - self.pos) < sigma:
             l.append(root)
         for node in root.children:
-            if node != self.father:
+            if node != self:
                 l += self.potential_father(node, sigma)
         return l
+    
+    def potential_father_brute(self, root):
+        if root == self:
+            return []
+        l = [root]
+        for node in root.children:
+            l += self.potential_father_brute(node)
+        return l
+        
         
         
     def update_father(self):
@@ -266,11 +308,12 @@ class Node:
         sigma = self.Pg(self.w)/self.w**alpha
         max_gain = sigma * self.w**alpha
         new_father = self.father
-        self.father.remove_child(self)
         root = self.father
         while root.father is not None:
             root = root.father
-        for node in self.potential_father(root, sigma):
+        pot_fathers = self.potential_father(root, sigma)
+        self.father.remove_child(self)
+        for node in pot_fathers:
             c = - node.Pg(-self.w)
             if c > max_gain:
                 max_gain = c
@@ -279,9 +322,44 @@ class Node:
         return
     
     def update_all(self):
+        """Not working """
         self.update_father()
-        for child in self.children:
+        copy = self.children
+        for child in copy:
             child.update_all()
+        
+    
+    def update_father_brute(self):
+        if self.father is None:
+            return
+        new_father = self.father
+        root = self.father
+        while root.father is not None:
+            root = root.father
+        cost = root.Malpha()
+        pot_fathers = self.potential_father_brute(root)
+        self.father.remove_child(self)
+        for node in pot_fathers:
+            node.add_child(self)
+            c = root.Malpha()
+            if c < cost:
+                cost = c
+                new_father = node
+            node.remove_child(self)
+        new_father.add_child(self)
+        return
+    
+    def update_all_brute(self):
+        self.update_father_brute()
+        copy = self.children[:]
+        for child in copy:
+            child.update_all_brute()
+            
+    def global_optimization_brute(self):
+        self.local_optimization()
+        self.subdivide_edges(2)
+        self.update_all_brute()
+        self.clean()
         
         
         

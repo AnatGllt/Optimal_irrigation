@@ -37,7 +37,7 @@ ymax = 10
 
 domain = [xmin, ymin, xmax, ymax]
 
-N = 20
+N = 40
 
 
 root, points = circle(N)
@@ -45,7 +45,7 @@ root, points = circle(N)
 
 
 O = subdivision(root, points, domain)
-
+#O = tree.naive(root, points)
 
 O.plot()
 
@@ -68,11 +68,15 @@ O.plot()
 
 print(O.Malpha())
 
+"""O.subdivide_edges(3)
+
+O.plot()
+
 O.update_all()
 
 O.plot()
 
-print(O.Malpha())
+print(O.Malpha())"""
 
 plt.clf()
 
