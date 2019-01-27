@@ -61,8 +61,8 @@ plt.clf()
 """
 sys.setrecursionlimit(20000)
 
-P = SphereNode(rd.random()*math.pi*2,rd.random()*math.pi,rd.random())
-Q = SphereNode(rd.random()*math.pi*2,rd.random()*math.pi,rd.random())
+P = SphereNode(rd.random()*math.pi,rd.random()*math.pi*2,rd.random())
+Q = SphereNode(rd.random()*math.pi,rd.random()*math.pi*2,rd.random())
 O = SphereNode(0, 0, 0)
 O.add_child(P)
 O.add_child(Q)

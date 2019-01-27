@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import spherical_geometry as sg
 import spherical_geometry.polygon as sp
 import scipy.optimize as opt
+from mpl_toolkits.mplot3d import Axes3D
 
 alpha = 0.5
 
@@ -330,25 +331,52 @@ def averagesubdiv(root, points, domain):
     iteration(points, domain)
     return root
 
-def sphere_line(A, B, bm, weight):
-    line = sp.SphericalPolygon.from_radec([A[0], B[0]],[A[1], B[1]])
-    line.draw(bm)
-    
+def convert(A):
+        return [np.sin(A[0]) * np.cos(A[1]), np.sin(A[0]) * np.sin(A[1]), np.cos(A[0])]
+
+def sphere_line(A, B, weight, ax, fig):
+    P = convert(A)
+    Q = convert(B)
+    t = np.linspace(0, 1, 100)
+    n = 1/np.sqrt(((1-t) * P[0] + t * Q[0])**2 + ((1-t) * P[1] + t * Q[1])**2 + ((1-t) * P[2] + t * Q[2])**2)
+    x = n * ((1-t) * P[0] + t * Q[0])
+    y = n * ((1-t) * P[1] + t * Q[1])
+    z = n * ((1-t) * P[2] + t * Q[2])
+    ax.plot(x, y, z, linewidth = 15*weight, color = '0', zorder=0)
 
 class SphereNode (Node):
     
     def plot(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        
+        u = np.linspace(0, 2 * np.pi, 100)
+        v = np.linspace(0, np.pi, 100)
+        x = np.outer(np.cos(u), np.sin(v))
+        y = np.outer(np.sin(u), np.sin(v))
+        z = np.outer(np.ones(np.size(u)), np.cos(v))
+
+        # Plot the surface
+        #   ax.plot_surface(x, y, z, color='w', zorder=-1)
+        
+        self.plot_rec(ax, fig)
+        
         plt.show()
+        
     
-    def plot_rec(self, bm):
+    def plot_rec(self, ax, fig):
         """plot the tree self recursively on its children """
         for node in self.children:
-            sphere_line(self.pos, node.pos, bm, node.w)
-            node.plot_rec(bm)
+            sphere_line(self.pos, node.pos, node.w, ax, fig)
+            node.plot_rec(ax, fig)
             
     def distance(A, B):
         """Returns the spherical length bewteen 2 points on a sphere"""
         d = np.arccos(np.cos(A[0]) * np.cos(B[0]) + np.sin(A[0]) * np.sin(B[0]) * np.cos(A[1]-B[1]))
+     #   print(d)
+     #   x = convert(A)
+     #   y = convert(B)
+     #   print(d - sg.great_circle_arc.length(x,y)*np.pi/180)
         return d
     
     def Malpha(self):
@@ -403,8 +431,8 @@ class SphereNode (Node):
                 return descent(x-step*diff, n-1)
 
         B = descent(start, MAX)
-        print(Malpha(B))
-        print(B)
+      #  print(Malpha(B))
+      #  print(B)
         
         if (SphereNode.distance(B, O)<epsilon):
             return
