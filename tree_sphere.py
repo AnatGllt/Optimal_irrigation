@@ -350,6 +350,9 @@ class SphereNode (Node):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         
+        ax.set_xlim(-1, 1)
+        ax.set_ylim(-1, 1)
+        
         u = np.linspace(0, 2 * np.pi, 100)
         v = np.linspace(0, np.pi, 100)
         x = np.outer(np.cos(u), np.sin(v))
