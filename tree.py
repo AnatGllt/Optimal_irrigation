@@ -359,7 +359,66 @@ class Node:
         self.subdivide_edges(2)
         self.update_all_brute()
         self.clean()
-        
+
+    def update_father_improved(self):
+        if self.father is None:
+            return
+        if self.w <= 0:
+            return
+        sigma = self.Pg(self.w)/self.w**alpha
+        max_gain = sigma * self.w**alpha
+        new_father = self.father
+        old_father = self.father
+        root = self.father
+        while root.father is not None:
+            root = root.father
+        old_cost = root.Malpha()
+        #pot_fathers = self.potential_father(root, sigma)
+        pot_fathers = self.potential_father_brute(root)
+        self.father.remove_child(self)
+        ## Linking to the root of the tree
+        root.add_child(self)
+        root_cost = root.Malpha()
+        root.remove_child(self)
+
+        for node in pot_fathers:
+            c = - node.Pg(-self.w)
+            if c > max_gain:
+                max_gain = c
+                new_father = node
+        new_father.add_child(self)
+        new_cost = root.Malpha()
+
+        #print("Cost comparison : Previous / Root / newfather")
+        #print(previous_cost)
+        #print(cost)
+        #print(new_cost)
+        ## comparing both costs
+        if new_cost > root_cost:
+            new_father.remove_child(self)
+            if old_cost >= root_cost :
+                root.add_child(self)
+            else:
+                old_father.add_child(self)
+        else: 
+            if old_cost < new_cost:
+                new_father.remove_child(self)
+                old_father.add_child(self)
+        return
+    
+
+    def update_all_improved(self):
+        """ Not working well """
+        self.update_father_improved()
+        copy = self.children
+        for child in copy:
+            child.update_all_improved()
+
+    def global_optimization_improved(self):
+        self.local_optimization()
+        self.subdivide_edges(2)
+        self.update_all_improved()
+        self.clean()        
         
         
 #End of class Node

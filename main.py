@@ -37,7 +37,7 @@ ymax = 10
 
 domain = [xmin, ymin, xmax, ymax]
 
-N = 100
+N = 50
 
 
 root, points = circle(N)
@@ -61,11 +61,34 @@ print(O.Malpha())
 
 #O = tree.averagesubdiv(root, points, domain)
 
+#O.local_optimization()
 
 
-O.local_optimization()
+#O.plot()
 
+#print(O.Malpha())
 
+brute = False
+#O.update_all_improved()
+#O.update_all_brute()
+if brute :
+	print("Using brute algo")
+	O.global_optimization_brute()
+else :
+	print("Using paper algo")
+	previousMalpha = O.Malpha()
+	loop = False
+	maxIter = 100
+	iter = 0
+	while not loop and iter < maxIter:
+	#for i in range(2):
+		O.global_optimization_improved()
+		## Stopping conditions
+		loop = (previousMalpha == O.Malpha())
+		iter +=1
+		previousMalpha = O.Malpha()
+	if iter == maxIter:
+		print("out because too much iterations")
 O.plot()
 
 print(O.Malpha())
