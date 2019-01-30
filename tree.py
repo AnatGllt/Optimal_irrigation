@@ -4,7 +4,7 @@ import numpy.linalg as LA
 import matplotlib.pyplot as plt
 import random as rd
 
-alpha = 0.75
+alpha = 0.5
 
 class Node:
     
@@ -28,12 +28,11 @@ class Node:
     
     def check_tree(self):
         res = True
-        if self.children != []:
-            res = self.w == sum([c.w for c in self.children])
-        if not res:
-            print(self.w, " != ", sum([c.w for c in self.children]))
-        for child in self.children:
-            res = res and child.check_tree()
+        if np.imag(self.w) != 0:
+            print("error: complex weight  ", self.w)
+            res = False
+        for c in self.children:
+            res = c.check_tree() and res
         return res
         
     def  print_tree(self):
@@ -91,7 +90,7 @@ class Node:
     def clean(self):
         liste = self.children[:]
         for c in liste:
-            if c.w == 0:
+            if c.w <= 0:
                 self.remove_child(c)
             else:
                 c.clean()
@@ -126,8 +125,8 @@ class Node:
         """ compute B_star the optimal point for irrigation  from self
         to nodeP and nodeQ by the algorithm described in the article
         nodeP and nodeQ must both be children of self"""
-        if equ(self.pos, nodeP.pos) or equ(self.pos, nodeQ.pos) or equ(nodeQ.pos, nodeP.pos):
-            raise ValueError("Two points are the same in computationn of B_star")
+        #if equ(self.pos, nodeP.pos) or equ(self.pos, nodeQ.pos) or equ(nodeQ.pos, nodeP.pos):
+        #    raise ValueError("Two points are the same in computationn of B_star")
         O = self.pos
         P = nodeP.pos
         Q = nodeQ.pos
@@ -148,10 +147,10 @@ class Node:
         k1 = (mP/mO)**(2*alpha)
         k2 = (mQ/mO)**(2*alpha)
         break_bool = False
-        if (mQ ==0):
+        if (mQ <=0):
             self.remove_child(nodeQ)
             break_bool = True
-        if (mP == 0):
+        if (mP <= 0):
             self.remove_child(nodeP)
             break_bool = True
         if break_bool:

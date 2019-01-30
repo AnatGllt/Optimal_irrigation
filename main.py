@@ -37,7 +37,7 @@ ymax = 10
 
 domain = [xmin, ymin, xmax, ymax]
 
-N = 40
+N = 100
 
 
 root, points = circle(N)
@@ -45,9 +45,11 @@ root, points = circle(N)
 
 
 O = subdivision(root, points, domain)
-#O = tree.naive(root, points)
+#O = tree.averagesubdiv(root, points, domain)
 
 O.plot()
+
+
 
 print(O.Malpha())
 
